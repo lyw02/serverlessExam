@@ -71,7 +71,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
     };
 
     const queryParams = event.queryStringParameters;
-    if (isValidQueryParams(queryParams) && !(parseInt(queryParams.min) >= 2)) {
+    if (isValidQueryParams(queryParams) && !(body.data!.awardDetail!.numAwards >= parseInt(queryParams.min))) {
       return {
         statusCode: 400,
         headers: {
