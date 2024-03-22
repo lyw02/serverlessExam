@@ -7,12 +7,19 @@ import {
   QueryCommandInput,
   GetCommand,
 } from "@aws-sdk/lib-dynamodb";
+import Ajv from "ajv";
+import schema from "../shared/types.schema.json";
 
 type ResponseBody = {
   data: {
-    awardDetail: MovieAward;
+    awardDetail: MovieAward | null;
   };
 };
+
+const ajv = new Ajv({ coerceTypes: true });
+const isValidQueryParams = ajv.compile(
+  schema.definitions["MovieAwardQueryParams"] || {}
+);
 
 const ddbDocClient = createDDbDocClient();
 
@@ -62,6 +69,17 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
     const body: ResponseBody = {
       data: { awardDetail: getCommandOutput.Item as MovieAward },
     };
+
+    const queryParams = event.queryStringParameters;
+    if (isValidQueryParams(queryParams) && !(parseInt(queryParams.min) >= 2)) {
+      return {
+        statusCode: 400,
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ Message: "Request failed" }),
+      };
+    }
 
     // Return Response
     return {
